@@ -6,11 +6,11 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/google_login')
 def google_login():
-    redirect_uri = url_for('auth.authorize', _external=True)
+    redirect_uri = url_for('auth.callback', _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
 
-@auth_bp.route('/authorize')
-def authorize():
+@auth_bp.route('/callback')
+def callback():
     token = oauth.google.authorize_access_token()
     user_info = token.get('userinfo')
     
