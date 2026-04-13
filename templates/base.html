@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LoadLink - Smart Sustainable Logistics{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS (CDN for prototype) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sage: '#98A869',
+                        moss: '#355E3B',
+                        themebg: '#F9F9F7'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-themebg min-h-screen flex flex-col pt-16">
+
+    <!-- Header / Navigation -->
+    <nav class="fixed top-0 w-full glass-panel z-50 px-6 py-4 rounded-none rounded-b-lg flex justify-between items-center transition-all">
+        <a href="{{ url_for('index') }}" class="text-2xl font-bold text-moss tracking-tight flex items-center gap-2">
+            <svg class="w-6 h-6 text-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            LoadLink
+        </a>
+        <div class="flex gap-4 items-center">
+            <a href="{{ url_for('index') }}" class="text-sm font-medium text-gray-700 hover:text-moss transition">Home</a>
+            
+            {% if session.get('user_id') %}
+            <a href="{{ url_for('user.profile') }}" class="text-sm font-medium text-gray-700 hover:text-moss transition">Hi, {{ session.get('user_name') }}</a>
+            <a href="{{ url_for('auth.logout') }}" class="text-sm font-medium text-gray-500 hover:text-moss transition">Logout</a>
+            {% else %}
+            <a href="{{ url_for('auth.google_login') }}" class="text-sm font-medium text-gray-700 hover:text-moss transition">Profile</a>
+            {% endif %}
+            
+            <a href="{{ url_for('driver.login') }}" class="btn-outline px-4 py-2 rounded-full text-sm font-semibold">Driver Login</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="mb-4">
+            {% for message in messages %}
+                <div class="bg-sage bg-opacity-20 border border-sage text-moss px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{ message }}</span>
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-gray-500 text-sm mt-auto">
+        &copy; 2026 LoadLink. Smart Sustainable Logistics.
+    </footer>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places&callback=initMap"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Driver Dashboard | LoadLink{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto fade-in-up">
+    <!-- Header info -->
+    <div class="glass-panel p-6 mb-8 flex justify-between items-center bg-moss text-white">
+        <div>
+            <h2 class="text-2xl font-bold text-white mb-1">Welcome back, {{ driver.name }}</h2>
+            <p class="text-white/80">Vehicle Capacity: {{ driver.vehicle_capacity }} KG | City: {{ driver.city }}</p>
+        </div>
+        <div class="text-right">
+            <span class="inline-block bg-green-500 text-white text-xs px-3 py-1 rounded-full font-semibold outline outline-2 outline-offset-2 outline-green-300">Online & Active</span>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+        
+        <!-- Map and Route UI -->
+        <div class="md:col-span-2 space-y-6">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="font-bold text-gray-800 mb-3 text-lg">Smart Route Planner</h3>
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="route_start" class="input-field flex-grow" placeholder="Enter Starting Point (e.g. Warehouse)">
+                    <input type="text" id="route_end" class="input-field flex-grow" placeholder="Enter Ending Point">
+                    <button type="button" onclick="calculateDriverRoute()" class="btn-primary px-4 py-2 rounded-lg font-semibold">Find Route</button>
+                </div>
+                <!-- Interactive Map -->
+                <div id="driver_map" class="w-full h-80 bg-gray-200 rounded-lg relative overflow-hidden mb-6"></div>
+                
+                <!-- Orders on this Route -->
+                <div id="route_orders_section" class="hidden bg-white rounded-xl border border-gray-100 p-4">
+                    <h3 class="font-bold text-gray-800 mb-3 text-lg flex justify-between items-center">
+                        Orders Along This Target Route
+                        <span id="route_orders_count" class="bg-sage text-white text-xs px-2 py-1 rounded-full">0 Matches</span>
+                    </h3>
+                    <div id="route_orders_container" class="space-y-4 max-h-[300px] overflow-y-auto">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Feed -->
+        <div>
+            <!-- My Active Orders -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col mb-6">
+                <div class="p-4 border-b bg-sage/20">
+                    <h3 class="font-bold text-moss text-lg flex items-center justify-between">
+                        My Active Deliveries
+                        <span class="bg-moss text-white text-xs px-2 py-1 rounded-full">{{ my_orders|length }}</span>
+                    </h3>
+                </div>
+                <div class="p-4 flex-grow overflow-y-auto space-y-4 max-h-[400px]">
+                    {% for order in my_orders %}
+                    <div class="border border-sage/50 bg-sage/5 rounded-lg p-4 relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="font-bold text-gray-800">{{ order.tracking_id }}</span>
+                            <span class="bg-white text-moss text-xs font-bold px-2 py-1 rounded shadow-sm">{{ order.status }}</span>
+                        </div>
+                        <div class="text-xs text-gray-600 mb-3 line-clamp-1">To: {{ order.dropoff_address }}</div>
+                        
+                        <form action="{{ url_for('driver.update_status', order_id=order.id) }}" method="POST" class="mt-2">
+                            {% if order.status == 'Accepted' %}
+                            <input type="hidden" name="new_status" value="In Transit">
+                            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs py-2 rounded font-semibold transition">Mark 'In Transit'</button>
+                            {% elif order.status == 'In Transit' %}
+                            <input type="hidden" name="new_status" value="Delivered">
+                            <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white text-xs py-2 rounded font-semibold transition">Mark 'Delivered'</button>
+                            {% endif %}
+                        </form>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-500 text-center py-4">No active deliveries.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Available Orders -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                <div class="p-4 border-b bg-gray-50">
+                    <h3 class="font-bold text-gray-800 text-lg flex items-center justify-between">
+                        Available Orders 
+                        <span class="bg-sage text-white text-xs px-2 py-1 rounded-full">{{ orders|length }} Matches</span>
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1">Smart grouped by capacity & detour delta</p>
+                </div>
+                
+                <div class="p-4 flex-grow overflow-y-auto space-y-4 max-h-[400px]">
+                    {% for order in orders %}
+                    <div class="border rounded-lg p-4 hover:border-sage transition cursor-pointer relative">
+                        {% if order.delivery_type == 'fast' %}
+                        <div class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                            FAST
+                        </div>
+                        {% endif %}
+                        
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="font-bold text-gray-800">{{ order.tracking_id }}</span>
+                            <span class="text-sm font-semibold text-moss">₹{{ "%.2f"|format(order.fare * 0.70) }} <span class="text-[10px] text-gray-400 font-normal">est.</span></span>
+                        </div>
+                        
+                        <div class="text-sm text-gray-600 mb-3 space-y-1">
+                            <p class="flex items-start gap-1"><span class="text-red-400">📍</span> <span class="truncate">{{ order.pickup_address }}</span></p>
+                            <p class="flex items-start gap-1"><span class="text-blue-400">🏁</span> <span class="truncate">{{ order.dropoff_address }}</span></p>
+                        </div>
+                        
+                        <div class="flex items-center justify-between mt-3 pt-3 border-t">
+                            <div class="text-xs font-medium text-gray-500">
+                                📦 {{ order.weight }} KG | {{ order.load_category }}
+                            </div>
+                            <form action="{{ url_for('driver.accept_order', order_id=order.id) }}" method="POST">
+                                <button type="submit" class="btn-primary text-xs px-3 py-1.5 rounded font-semibold">Accept</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-10 text-gray-400">
+                        <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                        <p>No optimal orders found right now.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let map;
+    let markers = [];
+    let routePolyline = null;
+
+    window.initMap = function() {
+        // Default center
+        map = new google.maps.Map(document.getElementById('driver_map'), {
+            center: { lat: 20.5937, lng: 78.9629 }, // Center of India
+            zoom: 5,
+            mapTypeControl: false,
+            streetViewControl: false
+        });
+    };
+
+    async function calculateDriverRoute() {
+        const startText = document.getElementById('route_start').value;
+        const endText = document.getElementById('route_end').value;
+
+        if (!startText || !endText) {
+            alert("Please enter both starting and ending points.");
+            return;
+        }
+
+        try {
+            // Helper function to safely geocode with retries
+            async function geocode(text) {
+                let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(text)}`);
+                let data = await res.json();
+                
+                // If it fails (maybe due to a typo like "coibatore"), try searching just the first part!
+                if (!data.length && text.includes(',')) {
+                    const fallbackText = text.split(',')[0].trim();
+                    res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackText)}`);
+                    data = await res.json();
+                }
+                return data;
+            }
+
+            const startData = await geocode(startText);
+            const endData = await geocode(endText);
+
+            if (!startData.length || !endData.length) {
+                alert("Could not find one of the locations! Please check for typos (e.g., 'coibatore' instead of 'coimbatore').");
+                return;
+            }
+
+            const pickupPos = { lat: parseFloat(startData[0].lat), lng: parseFloat(startData[0].lon) };
+            const dropoffPos = { lat: parseFloat(endData[0].lat), lng: parseFloat(endData[0].lon) };
+
+            // Clear old markers/lines
+            markers.forEach(m => m.setMap(null));
+            markers = [];
+            if (routePolyline) routePolyline.setMap(null);
+
+            // Draw new pins
+            markers.push(new google.maps.Marker({
+                position: pickupPos,
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+            }));
+            markers.push(new google.maps.Marker({
+                position: dropoffPos,
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+            }));
+
+            // Fetch Route from OSRM
+            const routeRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${pickupPos.lng},${pickupPos.lat};${dropoffPos.lng},${dropoffPos.lat}?geometries=geojson`);
+            const routeData = await routeRes.json();
+
+            if (routeData.code === 'Ok' && routeData.routes.length > 0) {
+                const coords = routeData.routes[0].geometry.coordinates;
+                const path = coords.map(c => ({ lat: c[1], lng: c[0] }));
+
+                routePolyline = new google.maps.Polyline({
+                    path: path,
+                    geodesic: true,
+                    strokeColor: '#0044ff',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 6,
+                    map: map
+                });
+            } else {
+                alert("OSRM could not map roads. Drawing straight line.");
+                routePolyline = new google.maps.Polyline({
+                    path: [pickupPos, dropoffPos],
+                    strokeColor: '#355E3B',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 4,
+                    map: map
+                });
+            }
+
+            // Adjust bounds to fit
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(pickupPos);
+            bounds.extend(dropoffPos);
+            map.fitBounds(bounds);
+
+            // Fetch orders along this specific route using geographic coordinates
+            const apiRes = await fetch(`/driver/api/route_orders?p_lat=${pickupPos.lat}&p_lng=${pickupPos.lng}&d_lat=${dropoffPos.lat}&d_lng=${dropoffPos.lng}`);
+            const apiData = await apiRes.json();
+            
+            const ordersSection = document.getElementById('route_orders_section');
+            const ordersContainer = document.getElementById('route_orders_container');
+            const ordersCount = document.getElementById('route_orders_count');
+            
+            ordersSection.classList.remove('hidden');
+            ordersCount.innerText = `${apiData.orders.length} Matches`;
+            ordersContainer.innerHTML = '';
+
+            if(apiData.orders.length === 0){
+                ordersContainer.innerHTML = `<div class="text-center py-6 text-gray-400">
+                    <p>No orders found spanning exactly between these two points right now.</p>
+                </div>`;
+            } else {
+                apiData.orders.forEach(order => {
+                    // Plot small dot for Pickup
+                    markers.push(new google.maps.Marker({
+                        position: { lat: order.p_lat, lng: order.p_lng },
+                        map: map,
+                        title: `Order ${order.tracking_id} Pickup`,
+                        icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                    }));
+                    
+                    // Plot small dot for Drop-off
+                    markers.push(new google.maps.Marker({
+                        position: { lat: order.d_lat, lng: order.d_lng },
+                        map: map,
+                        title: `Order ${order.tracking_id} Dropoff`,
+                        icon: 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png'
+                    }));
+
+                    const fastTag = order.type === 'fast' ? `<div class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">FAST</div>` : '';
+                    ordersContainer.innerHTML += `
+                        <div class="border rounded-lg p-4 hover:border-sage transition relative cursor-pointer">
+                            ${fastTag}
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-bold text-gray-800">${order.tracking_id}</span>
+                                <span class="text-sm font-semibold text-moss">₹${(order.fare * 0.70).toFixed(2)}</span>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-3 space-y-1">
+                                <p class="flex items-start gap-1"><span class="text-red-400">📍</span> <span class="truncate">${order.pickup}</span></p>
+                                <p class="flex items-start gap-1"><span class="text-blue-400">🏁</span> <span class="truncate">${order.dropoff}</span></p>
+                            </div>
+                            <div class="flex items-center justify-between mt-3 pt-3 border-t">
+                                <div class="text-xs font-medium text-gray-500">📦 ${order.weight} KG | ${order.category}</div>
+                                <form action="/driver/accept_order/${order.id}" method="POST">
+                                    <button type="submit" class="btn-primary text-xs px-3 py-1.5 rounded font-semibold">Accept Route</button>
+                                </form>
+                            </div>
+                        </div>`;
+                });
+            }
+
+        } catch (err) {
+            console.error(err);
+            alert("Error fetching map data.");
+        }
+    }
+</script>
+{% endblock %}

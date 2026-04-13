@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Driver Login | LoadLink{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10">
+    <div class="glass-panel p-8 fade-in-up">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-moss">Driver Portal</h2>
+            <p class="text-gray-500 mt-2">Login to find eco-friendly delivery routes.</p>
+        </div>
+
+        <form action="{{ url_for('driver.login') }}" method="POST" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Registered Phone Number</label>
+                <input type="tel" name="phone" required class="input-field" placeholder="+1 234 567 8900">
+            </div>
+            
+            <button type="submit" class="btn-primary w-full py-3 rounded-lg font-semibold shadow-md">
+                Login
+            </button>
+        </form>
+
+        <div class="mt-8 text-center border-t pt-6">
+            <p class="text-sm text-gray-600">New Driver?</p>
+            <a href="{{ url_for('driver.register') }}" class="btn-outline w-full py-3 rounded-lg font-semibold mt-3 block text-center inline-block">
+                Join LoadLink Fleet
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

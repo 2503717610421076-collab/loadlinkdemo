@@ -1,0 +1,88 @@
+:root {
+    --color-sage: #98A869;
+    --color-moss: #355E3B;
+    --color-bg: #F9F9F7;
+    --color-text-dark: #1F2937;
+    --color-white: #FFFFFF;
+}
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-text-dark);
+    font-family: 'Inter', sans-serif;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
+/* Custom Buttons */
+.btn-primary {
+    background-color: var(--color-moss);
+    color: var(--color-white);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-sage);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(53, 94, 59, 0.2);
+}
+
+.btn-outline {
+    border: 2px solid var(--color-moss);
+    color: var(--color-moss);
+    transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+    background-color: var(--color-moss);
+    color: var(--color-white);
+}
+
+/* Glassmorphism Elements */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}
+
+/* Micro animations */
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Input Fields */
+.input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.5rem;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    background-color: var(--color-white);
+}
+
+.input-field:focus {
+    border-color: var(--color-sage);
+    box-shadow: 0 0 0 3px rgba(152, 168, 105, 0.2);
+}
+
+/* Floating map container */
+#map {
+    height: 300px;
+    width: 100%;
+    border-radius: 0.5rem;
+    background-color: #e2e8f0;
+}

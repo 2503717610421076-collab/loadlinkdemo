@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Booking - Step 2 | LoadLink{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto glass-panel p-8 fade-in-up">
+    <!-- Progress Indicator -->
+    <div class="mb-8 border-b pb-4">
+        <div class="flex justify-between items-center text-sm font-medium">
+            <span class="text-sage font-bold">1. Details</span>
+            <span class="text-sage font-bold">2. Preferences</span>
+            <span class="text-gray-400">3. Confirmation</span>
+        </div>
+        <div class="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
+            <div class="bg-sage h-full rounded-full transition-all duration-500" style="width: 66%"></div>
+        </div>
+    </div>
+
+    <h2 class="text-3xl font-bold text-moss mb-6">Delivery Preferences</h2>
+    
+    <form action="{{ url_for('booking.step2') }}" method="POST" class="space-y-8">
+        
+        <!-- Delivery Speed -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 class="text-xl font-semibold mb-3 text-gray-800">Delivery Speed</h3>
+            <div class="flex gap-4">
+                <label class="flex-1 cursor-pointer">
+                    <input type="radio" name="delivery_type" value="ordinary" class="peer sr-only" checked>
+                    <div class="p-4 border-2 rounded-xl peer-checked:border-sage peer-checked:bg-sage/10 hover:bg-gray-50 transition text-center">
+                        <div class="text-lg font-bold text-gray-800 mb-1">Ordinary</div>
+                        <div class="text-sm text-gray-500">Standard eco-friendly routing</div>
+                    </div>
+                </label>
+                <label class="flex-1 cursor-pointer">
+                    <input type="radio" name="delivery_type" value="fast" class="peer sr-only">
+                    <div class="p-4 border-2 rounded-xl peer-checked:border-sage peer-checked:bg-sage/10 hover:bg-gray-50 transition text-center">
+                        <div class="text-lg font-bold text-gray-800 mb-1">Fast Delivery</div>
+                        <div class="text-sm text-gray-500">Priority routing (Extra Fare)</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Pooling Choice -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 class="text-xl font-semibold mb-3 text-gray-800">Vehicle Type</h3>
+            <p class="text-sm text-gray-500 mb-4">Sharing space reduces carbon emissions and cost.</p>
+            <div class="space-y-3">
+                <label class="block cursor-pointer">
+                    <input type="radio" name="pooling_choice" value="combine" class="peer sr-only" checked>
+                    <div class="p-4 border-2 rounded-xl peer-checked:border-moss peer-checked:bg-moss/10 flex items-center justify-between transition">
+                        <div>
+                            <div class="font-bold text-gray-800">Combine Delivery (Eco-Pool)</div>
+                            <div class="text-sm text-gray-500">Share vehicle space with others on the same route.</div>
+                        </div>
+                        <svg class="w-6 h-6 text-moss opacity-0 peer-checked:opacity-100 transition" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                    </div>
+                </label>
+                <label class="block cursor-pointer">
+                    <input type="radio" name="pooling_choice" value="separate" class="peer sr-only">
+                    <div class="p-4 border-2 rounded-xl peer-checked:border-moss peer-checked:bg-moss/10 flex items-center justify-between transition">
+                        <div>
+                            <div class="font-bold text-gray-800">Dedicated Vehicle</div>
+                            <div class="text-sm text-gray-500">Exclusive truck for your fragile/large goods. (Extra Fare)</div>
+                        </div>
+                        <svg class="w-6 h-6 text-moss opacity-0 peer-checked:opacity-100 transition" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Timing -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 class="text-xl font-semibold mb-3 text-gray-800">Pickup Timing</h3>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Pickup Time</label>
+                <input type="datetime-local" name="pickup_time" required class="input-field w-full max-w-sm">
+            </div>
+        </div>
+
+        <div class="flex justify-between">
+            <a href="{{ url_for('booking.step1') }}" class="btn-outline px-6 py-3 rounded-lg font-semibold flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                Back
+            </a>
+            <button type="submit" class="btn-primary px-8 py-3 rounded-lg font-semibold flex items-center gap-2">
+                View Estimate
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

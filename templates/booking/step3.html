@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Booking - Summary | LoadLink{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto glass-panel p-8 fade-in-up">
+    {% if success %}
+        <div class="text-center py-10">
+            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-green-100 text-green-500 mb-6">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 class="text-4xl font-bold text-moss mb-4">Order Placed Successfully!</h2>
+            <p class="text-gray-600 mb-2">Our AI is grouping your order and matching it with the best sustainable route.</p>
+            <div class="bg-white inline-block px-6 py-4 rounded-xl border border-gray-100 shadow-sm mt-4">
+                <p class="text-sm text-gray-500 mb-1">Your Tracking ID</p>
+                <p class="text-2xl font-mono font-bold text-sage">{{ order.tracking_id }}</p>
+            </div>
+            <div class="mt-8">
+                <a href="{{ url_for('index') }}" class="btn-primary px-8 py-3 rounded-full font-semibold inline-block">Return to Home</a>
+            </div>
+        </div>
+    {% else %}
+        <!-- Progress Indicator -->
+        <div class="mb-8 border-b pb-4">
+            <div class="flex justify-between items-center text-sm font-medium">
+                <span class="text-sage font-bold">1. Details</span>
+                <span class="text-sage font-bold">2. Preferences</span>
+                <span class="text-sage font-bold">3. Confirmation</span>
+            </div>
+            <div class="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
+                <div class="bg-sage h-full rounded-full transition-all duration-500" style="width: 100%"></div>
+            </div>
+        </div>
+
+        <h2 class="text-3xl font-bold text-moss mb-6">Order Summary</h2>
+        
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="md:col-span-2 space-y-6">
+                <!-- Locations -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="font-semibold text-gray-800 border-b pb-2 mb-4">Locations</h3>
+                    <div class="mb-4">
+                        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Pickup</p>
+                        <p class="font-medium text-gray-800">{{ step1.pickup_address }}</p>
+                        <p class="text-sm text-gray-500">{{ step1.pickup_name }} ({{ step1.pickup_phone }})</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-blue-500 uppercase tracking-wider mb-1">Drop-off</p>
+                        <p class="font-medium text-gray-800">{{ step1.dropoff_address }}</p>
+                        <p class="text-sm text-gray-500">{{ step1.dropoff_name }} ({{ step1.dropoff_phone }})</p>
+                    </div>
+                    
+                    <div id="summary_map" class="w-full h-64 bg-gray-200 mt-6 rounded-lg relative overflow-hidden border border-gray-300"></div>
+                
+                <!-- Details -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Load Category</p>
+                        <p class="font-medium text-gray-800">{{ step1.load_category }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Total Weight</p>
+                        <p class="font-medium text-gray-800">{{ step1.weight }} KG</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Speed</p>
+                        <p class="font-medium text-gray-800 capitalize">{{ step2.delivery_type }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Vehicle Match</p>
+                        <p class="font-medium text-gray-800 capitalize">{{ step2.pooling_choice }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing & Submission -->
+            <div class="space-y-6">
+                <div class="bg-moss text-white p-6 rounded-xl shadow-lg relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 20 20"><path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z"></path></svg>
+                    </div>
+                    
+                    <h3 class="font-semibold text-white/80 mb-6">Fare Estimate</h3>
+                    
+                    <div class="flex items-end gap-1 mb-6">
+                        <span class="text-4xl font-bold">₹{{ "%.2f"|format(fare) }}</span>
+                    </div>
+
+                    <div class="border-t border-white/20 pt-4 mb-4">
+                        <p class="text-xs text-white/70 uppercase tracking-wider mb-1">AI-Estimated Arrival</p>
+                        <p class="font-medium">{{ eta }}</p>
+                    </div>
+                    
+                    {% if step2.pooling_choice == 'combine' %}
+                    <div class="bg-white/10 p-3 rounded text-sm text-white/90">
+                        🌱 Eco-Pool selected! Thank you for reducing carbon emissions.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <form action="{{ url_for('booking.step3') }}" method="POST">
+                    <button type="submit" class="btn-primary w-full py-4 rounded-xl font-bold text-lg shadow-md flex items-center justify-center gap-2">
+                        Confirm Order
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                    <a href="{{ url_for('booking.step2') }}" class="block text-center mt-4 text-sm text-gray-500 hover:text-gray-800">Edit Preferences</a>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if not success %}
+<script>
+    function initMap() {
+        const mapElement = document.getElementById('summary_map');
+        if (!mapElement) return;
+
+        const pLat = parseFloat("{{ step1.pickup_lat }}");
+        const pLng = parseFloat("{{ step1.pickup_lng }}");
+        const dLat = parseFloat("{{ step1.dropoff_lat }}");
+        const dLng = parseFloat("{{ step1.dropoff_lng }}");
+        
+        // If coordinates aren't valid, don't break
+        if(isNaN(pLat) || isNaN(pLng)) return;
+
+        const map = new google.maps.Map(mapElement, {
+            zoom: 10,
+            mapTypeControl: false,
+            streetViewControl: false
+        });
+
+        const pickupPos = { lat: pLat, lng: pLng };
+        const dropoffPos = { lat: dLat, lng: dLng };
+
+        const directionsService = new google.maps.DirectionsService();
+        const directionsRenderer = new google.maps.DirectionsRenderer({
+            map: map,
+            suppressMarkers: false,
+            polylineOptions: {
+                strokeColor: '#0044ff', // Thick solid blue line matching the user's request
+                strokeOpacity: 0.8,
+                strokeWeight: 6
+            }
+        });
+
+        const request = {
+            origin: pickupPos,
+            destination: dropoffPos,
+            travelMode: 'DRIVING'
+        };
+
+        function drawPinsAndBounds() {
+            new google.maps.Marker({
+                position: pickupPos,
+                map: map,
+                title: "Pickup",
+                icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+            });
+            new google.maps.Marker({
+                position: dropoffPos,
+                map: map,
+                title: "Drop-off",
+                icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+            });
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(pickupPos);
+            bounds.extend(dropoffPos);
+            map.fitBounds(bounds);
+        }
+
+        directionsService.route(request, function(result, status) {
+            if (status == 'OK') {
+                directionsRenderer.setDirections(result);
+            } else {
+                console.warn('Google Directions request blocked. Booting up Open Source OSRM Routing fallback...');
+                drawPinsAndBounds();
+                
+                // Use completely free Open Source Routing Machine to trace the roads instead!
+                fetch(`https://router.project-osrm.org/route/v1/driving/${pLng},${pLat};${dLng},${dLat}?geometries=geojson`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.code === 'Ok' && data.routes.length > 0) {
+                        const coords = data.routes[0].geometry.coordinates;
+                        const routePath = coords.map(coord => ({ lat: coord[1], lng: coord[0] }));
+                        
+                        new google.maps.Polyline({
+                            path: routePath,
+                            geodesic: true,
+                            strokeColor: '#0044ff', // Beautiful bright blue
+                            strokeOpacity: 0.8,
+                            strokeWeight: 6,
+                            map: map
+                        });
+                    } else {
+                        throw new Error("No route found from OSRM");
+                    }
+                })
+                .catch(err => {
+                    console.error("OSRM Route fallback failed too:", err);
+                    // Draw a straight dashed line between them as final resort
+                    new google.maps.Polyline({
+                        path: [pickupPos, dropoffPos],
+                        geodesic: true,
+                        strokeColor: '#355E3B', 
+                        strokeOpacity: 0.8,
+                        strokeWeight: 2,
+                        icons: [{
+                            icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 3 },
+                            offset: '0',
+                            repeat: '20px'
+                        }],
+                        map: map
+                    });
+                });
+            }
+        });
+    }
+</script>
+{% endif %}
+{% endblock %}

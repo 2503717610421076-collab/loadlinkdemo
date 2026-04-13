@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Booking - Step 1 | LoadLink{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto glass-panel p-8 fade-in-up">
+    <!-- Progress Indicator -->
+    <div class="mb-8 border-b pb-4">
+        <div class="flex justify-between items-center text-sm font-medium">
+            <span class="text-sage font-bold">1. Details</span>
+            <span class="text-gray-400">2. Preferences</span>
+            <span class="text-gray-400">3. Confirmation</span>
+        </div>
+        <div class="w-full bg-gray-200 h-2 mt-2 rounded-full overflow-hidden">
+            <div class="bg-sage h-full rounded-full" style="width: 33%"></div>
+        </div>
+    </div>
+
+    <h2 class="text-3xl font-bold text-moss mb-6">Delivery Details</h2>
+    
+    <form action="{{ url_for('booking.step1') }}" method="POST" class="space-y-8">
+        
+        <!-- Pickup Section -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                <svg class="w-5 h-5 text-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Pickup Location
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
+                    <input type="text" name="pickup_name" required class="input-field" placeholder="Enter your name">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <input type="tel" name="pickup_phone" required class="input-field" placeholder="Enter your phone number">
+                </div>
+            </div>
+            
+            <div class="mb-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Address / Location</label>
+                <div class="flex gap-2 mb-3">
+                    <input type="text" id="pickup_address" name="pickup_address" required class="input-field flex-grow" placeholder="Enter address or pin location">
+                    <button type="button" onclick="getLocation('pickup_address')" class="btn-outline px-4 rounded-lg flex items-center justify-center" title="Get Live Location">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </button>
+                </div>
+                <div id="map" class="w-full h-64 bg-gray-200 mt-2 rounded-lg relative overflow-hidden border border-gray-300"></div>
+                <!-- Hidden lat lng fields for mockup -->
+                <input type="hidden" id="pickup_lat" name="pickup_lat" value="0">
+                <input type="hidden" id="pickup_lng" name="pickup_lng" value="0">
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Allow location access to pin live location automatically, or manually drag the pin.</p>
+        </div>
+
+        <!-- Dropoff Section -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                <svg class="w-5 h-5 text-moss" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Drop-off Location
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
+                    <input type="text" name="dropoff_name" required class="input-field" placeholder="Enter your name">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <input type="tel" name="dropoff_phone" required class="input-field" placeholder="Enter your phone number">
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <input type="text" id="dropoff_address" name="dropoff_address" required class="input-field" placeholder="Enter destination address">
+                <div id="dropoff_map" class="w-full h-64 bg-gray-200 mt-2 rounded-lg relative overflow-hidden border border-gray-300"></div>
+                <input type="hidden" id="dropoff_lat" name="dropoff_lat" value="0">
+                <input type="hidden" id="dropoff_lng" name="dropoff_lng" value="0">
+            </div>
+        </div>
+
+        <!-- Load Section -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800">Load Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select name="load_category" required class="input-field bg-white">
+                        <option value="Home Appliances">Home Appliances</option>
+                        <option value="Office Equipment">Office Equipment</option>
+                        <option value="Industrial Goods">Industrial Goods</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Fragile Items">Fragile Items</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Weight (kg)</label>
+                    <input type="number" name="weight" min="1" step="0.1" required class="input-field" placeholder="e.g. 150">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end">
+            <button type="submit" class="btn-primary px-8 py-3 rounded-lg font-semibold flex items-center gap-2">
+                Next Step
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
